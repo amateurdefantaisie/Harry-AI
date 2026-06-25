@@ -1,0 +1,53 @@
+import { Telegraf } from 'telegraf';
+import { GoogleGenAI } from '@google/generative-ai';
+import { db } from './firebase-config.js';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import 'dotenv/config';
+
+const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+console.log("🚀 Harry AI Assistant s'allume...");
+
+// 1. Commande de démarrage avec sauvegarde utilisateur dans Firebase
+bot.start(async (ctx) => {
+    const userId = ctx.from.id.toString();
+    
+    try {
+        // Enregistrement ou mise à jour de l'utilisateur dans Firestore
+        await setDoc(doc(db, "users", userId), {
+            username: ctx.from.username || "Inconnu",
+            firstName: ctx.from.first_name,
+            lastSeen: serverTimestamp()
+        }, { merge: true });
+
+        ctx.reply(`Bienvenue chez Amateur De Fantaisie, ${ctx.from.first_name} ! Je suis ton assistant IA connecté.`);
+    } catch (error) {
+        console.error("Erreur d'enregistrement Firebase :", error);
+        ctx.reply("Bienvenue ! (Note : Impossible de mettre à jour votre profil dans la BDD).");
+    }
+});
+
+// 2. Traitement des messages par l'IA
+bot.on('text', async (ctx) => {
+    if (ctx.message.text.startsWith('/')) return; // On ignore les commandes de modération pour l'instant
+
+    try {
+        await ctx.sendChatAction('typing');
+
+        // Appel à l'IA
+        const result = await model.generateContent(ctx.message.text);
+        const responseText = result.response.text();
+
+        await ctx.reply(responseText);
+    } catch (error) {
+        console.error("Erreur IA :", error);
+        await ctx.reply("Une erreur est survenue avec l'IA.");
+    }
+});
+
+bot.launch();
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
