@@ -10,7 +10,12 @@ const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = ai.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-console.log("🚀 Harry AI Assistant s'allume...");
+// Bloc de diagnostic temporaire
+if (!process.env.GEMINI_API_KEY) {
+    console.error("❌ ERREUR : La variable GEMINI_API_KEY est introuvable ou vide dans Railway !");
+} else {
+    console.log("✅ GEMINI_API_KEY détectée (Longueur : " + process.env.GEMINI_API_KEY.length + " caractères)");
+}
 
 // 1. Commande de démarrage avec sauvegarde utilisateur dans Firebase
 bot.start(async (ctx) => {
