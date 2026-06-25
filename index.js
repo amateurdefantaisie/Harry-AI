@@ -1,11 +1,13 @@
 import { Telegraf } from 'telegraf';
-import { GoogleGenAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db } from './firebase-config.js';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import 'dotenv/config';
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// Correction de l'initialisation de Gemini
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 console.log("🚀 Harry AI Assistant s'allume...");
@@ -15,7 +17,6 @@ bot.start(async (ctx) => {
     const userId = ctx.from.id.toString();
     
     try {
-        // Enregistrement ou mise à jour de l'utilisateur dans Firestore
         await setDoc(doc(db, "users", userId), {
             username: ctx.from.username || "Inconnu",
             firstName: ctx.from.first_name,
@@ -31,7 +32,7 @@ bot.start(async (ctx) => {
 
 // 2. Traitement des messages par l'IA
 bot.on('text', async (ctx) => {
-    if (ctx.message.text.startsWith('/')) return; // On ignore les commandes de modération pour l'instant
+    if (ctx.message.text.startsWith('/')) return; 
 
     try {
         await ctx.sendChatAction('typing');
