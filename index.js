@@ -8,7 +8,7 @@ const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
 // Correction de l'initialisation de Gemini
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = ai.getGenerativeModel({ model: "gemini-1.5-pro" });
+const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Bloc de diagnostic temporaire
 if (!process.env.GEMINI_API_KEY) {
